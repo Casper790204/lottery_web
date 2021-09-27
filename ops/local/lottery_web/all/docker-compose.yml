@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0.23
+    command: --default-authentication-plugin=mysql_native_password --default-time-zone=+08:00
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=lottery_web
+      - TZ=Asia/Taipei
+    working_dir: /app/
+    volumes:
+      - mysql-lottery_web-volume:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.1.0
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=123456
+      - TZ=Asia/Taipei
+    ports:
+      - "7773:80"
+    volumes:
+      - ../../../../ops/local/lottery_web/all/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+      - ../../../../ops/local/lottery_web/all/phpmyadmin/customer.ini:/usr/local/etc/php/conf.d/customer.ini
+    depends_on:
+      - mysql
+
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin:v1.13.2
+    environment:
+      - TZ=Asia/Taipei
+      - REDIS_1_HOST=redis
+      - REDIS_1_PORT=6379
+    ports:
+      - "7774:80"
+    depends_on:
+      - redis
+
+  redis:
+    environment:
+      - TZ=Asia/Taipei
+    image: redis:6.2.1
+    sysctls:
+      - net.core.somaxconn=1024
+
+  php:
+    build:
+      context: ../../../../
+      dockerfile: ./ops/local/lottery_web/all/php.dockerfile
+    volumes:
+      - ../../../../:/app/:cached
+    working_dir: /app/code/backend/lottery_web
+    depends_on:
+      - redis
+      - mysql
+
+  nginx:
+    build:
+      context: ../../../../
+      dockerfile: ./ops/local/lottery_web/all/nginx.dockerfile
+    ports:
+      - "7771:80"
+    volumes:
+      - ../../../../:/app/:cached
+    command: [ nginx, '-g', 'daemon off;' ]
+    depends_on:
+      - php
+
+volumes:
+  mysql-lottery_web-volume:
