@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="localhost" type="PhpWebAppRunConfigurationType" factoryName="PHP Web Application" server_name="localhost">
+  <configuration default="false" name="localhost" type="PhpWebAppRunConfigurationType" factoryName="PHP Web Application" server_name="localhost" start_url="/index.html">
     <method v="2" />
   </configuration>
 </component>
